@@ -113,9 +113,10 @@ public class LockScreenService extends Service {
                 WindowManager.LayoutParams.MATCH_PARENT,  // Во всю ширину экрана
                 WindowManager.LayoutParams.MATCH_PARENT,  // Во всю высоту экрана
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,  // Окно уровня оверлей
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |       // Окно не перехватывает фокус
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |  // Позволяет получать касания вне окна
-                        WindowManager.LayoutParams.FLAG_FULLSCREEN,         // На весь экран
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE // Окно не перехватывает фокус
+                        | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL   // Позволяет получать касания вне окна
+                        | WindowManager.LayoutParams.FLAG_FULLSCREEN
+                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,   // На весь экран
                 PixelFormat.TRANSLUCENT);  // Прозрачный пиксельный формат
 
         // Добавляем наш экран блокировки в окно системы
