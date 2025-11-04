@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 // Для задания формата пикселей окна оверлея
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 // Интерфейс для привязки сервиса (здесь не используется, возвращаем null)
 import android.os.Build;
@@ -26,11 +27,31 @@ import android.view.WindowManager;
 import android.widget.Toast;
 // Аннотация для Nullable возвращаемого значения
 import androidx.annotation.Nullable;
+import android.graphics.Point;  // импорт для возвращаемой координаты
 
 public class FloatButtonService extends Service {
     private WindowManager windowManager;           // Менеджер управления окнами
     private View floatButtonView;                   // Самая кнопка — View из layout_float_button
     private WindowManager.LayoutParams params;     // Параметры расположения кнопки и поведения окна
+
+    private static final String PREFS_NAME = "floating_button_prefs";
+    private static final String KEY_X = "button_x";
+    private static final String KEY_Y = "button_y";
+
+    private void saveCoordinates(int x, int y) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        prefs.edit()
+                .putInt(KEY_X, x)
+                .putInt(KEY_Y, y)
+                .apply();
+    }
+
+    private Point loadCoordinates() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        int x = prefs.getInt(KEY_X, 0);          // Значения по умолчанию
+        int y = prefs.getInt(KEY_Y, 100);
+        return new Point(x, y);
+    }
 
     private BroadcastReceiver showHideReceiver = new BroadcastReceiver() {
         @Override
@@ -88,6 +109,7 @@ public class FloatButtonService extends Service {
         floatButtonView = LayoutInflater.from(this).inflate(R.layout.layout_float_button, null);
 
         // Создаем параметры окна для плавающей кнопки
+        Point coords = loadCoordinates();
         params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,      // ширина — под размер контента
                 WindowManager.LayoutParams.WRAP_CONTENT,      // высота — под размер контента
@@ -96,9 +118,9 @@ public class FloatButtonService extends Service {
                 PixelFormat.TRANSLUCENT);                          // прозрачность пикселей окна
         // Располагаем кнопку вверху слева экрана
         params.gravity = Gravity.TOP | Gravity.START;
-        // Начальные координаты кнопки
-        params.x = 0;
-        params.y = 0;
+        // используем загруженные координаты
+        params.x = coords.x;
+        params.y = coords.y;
         // Добавляем floatButtonView в окно с заданными параметрами
         windowManager.addView(floatButtonView, params);
         // Показываем сообщение, что кнопка добавлена
@@ -141,6 +163,10 @@ public class FloatButtonService extends Service {
                         return true;
                     // Пользователь отпустил палец
                     case MotionEvent.ACTION_UP:
+                        //сохраняем новые координаты
+                        if (isMoving) {
+                            saveCoordinates(params.x, params.y);
+                        }
                         // Если не было движения — значит, произошло обычное нажатие
                         if (!isMoving) {
                             // Запускаем сервис блокировки экрана
