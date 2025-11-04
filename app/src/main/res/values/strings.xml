@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">LockScreenOverlay</string>
+    <string name="floating_button">Floating Lockscreen Button</string>
+</resources>
