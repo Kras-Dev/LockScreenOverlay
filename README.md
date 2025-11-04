@@ -9,7 +9,8 @@
 * Плавающая кнопка для вызова блокировки
 
 ## Как использовать
-1. Установите приложение [Скачать APK файл](https://github.com/Kras-Dev/LockScreenOverlay/blob/main/LockScreenOverlay.apk) на Android устройство.
+1. Установите приложение [Скачать APK файл](https://github.com/Kras-Dev/LockScreenOverlay/raw/main/LockScreenOverlay.apk
+) на Android устройство.
 2. При первом запуске необходимо предоставить разрешение SYSTEM_ALERT_WINDOW.
 3. Плавающая кнопка появляется на экране, нажмите её для показа экрана блокировки.
 4. Разблокируйте экран свайпом круга вправо.
