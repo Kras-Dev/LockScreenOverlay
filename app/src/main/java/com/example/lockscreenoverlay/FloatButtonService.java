@@ -3,10 +3,14 @@ package com.example.lockscreenoverlay;
 // Импортируем базовый класс Service для создания сервиса
 import android.app.Service;
 // Импортируем Intent для запуска активностей и сервисов
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 // Для задания формата пикселей окна оверлея
+import android.content.IntentFilter;
 import android.graphics.PixelFormat;
 // Интерфейс для привязки сервиса (здесь не используется, возвращаем null)
+import android.os.Build;
 import android.os.IBinder;
 // Для задания расположения окна на экране
 import android.view.Gravity;
@@ -28,6 +32,27 @@ public class FloatButtonService extends Service {
     private View floatButtonView;                   // Самая кнопка — View из layout_float_button
     private WindowManager.LayoutParams params;     // Параметры расположения кнопки и поведения окна
 
+    private BroadcastReceiver showHideReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if ("ACTION_HIDE_FLOAT_BUTTON".equals(action)) {
+                if (floatButtonView != null) {
+                    try {
+                        windowManager.removeView(floatButtonView);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    floatButtonView = null;
+                }
+            } else if ("ACTION_SHOW_FLOAT_BUTTON".equals(action)) {
+                if (floatButtonView == null) {
+                    createAndAddFloatButton();
+                }
+            }
+        }
+    };
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -38,8 +63,27 @@ public class FloatButtonService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        // Получаем системный сервис для управления окнами
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        // Регистрируем BroadcastReceiver с учетом Android 14+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("ACTION_HIDE_FLOAT_BUTTON");
+        filter.addAction("ACTION_SHOW_FLOAT_BUTTON");
+        if (Build.VERSION.SDK_INT >= 34) {
+            registerReceiver(showHideReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(showHideReceiver, filter);
+        }
+
+        createAndAddFloatButton();
+    }
+    private void createAndAddFloatButton() {
+        // Удаляем предыдущий экземпляр, если он есть
+        if (floatButtonView != null) {
+            try {
+                windowManager.removeView(floatButtonView);
+            } catch (Exception ignored) {}
+            floatButtonView = null;
+        }
         // Загружаем View кнопки из XML разметки
         floatButtonView = LayoutInflater.from(this).inflate(R.layout.layout_float_button, null);
 
@@ -113,11 +157,16 @@ public class FloatButtonService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // Если кнопка была добавлена на экран — удаляем её
         if (floatButtonView != null) {
-            windowManager.removeView(floatButtonView);  // Удаляем View с экрана
-            floatButtonView = null;                       // Освобождаем ссылку
+            try {
+                windowManager.removeView(floatButtonView);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            floatButtonView = null;
         }
         Toast.makeText(getApplicationContext(), "Кнопка удалена", Toast.LENGTH_SHORT).show();
+
+        unregisterReceiver(showHideReceiver);
     }
 }

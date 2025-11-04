@@ -38,6 +38,9 @@ public class LockScreenService extends Service {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         // Загружаем View блокирующего экрана из XML разметки
         lockScreenView = LayoutInflater.from(this).inflate(R.layout.layout_lock_screen, null);
+        // Скрыть плавающую кнопку при показе экрана блокировки
+        Intent hideIntent = new Intent("ACTION_HIDE_FLOAT_BUTTON");
+        sendBroadcast(hideIntent);
         // Получаем область свайпа для отслеживания движений пользователя
         final View swipeZone = lockScreenView.findViewById(R.id.swipe_area);
         // Получаем круглый индикатор, который пользователь будет перетаскивать
@@ -98,6 +101,9 @@ public class LockScreenService extends Service {
         // Устанавливаем обработчик нажатия на кнопку закрытия
         closeButton.setOnClickListener(v -> {
             stopSelf();  // Останавливаем сервис блокировки
+            // При закрытии шоу обратно плавающую кнопку
+            Intent showIntent = new Intent("ACTION_SHOW_FLOAT_BUTTON");
+            sendBroadcast(showIntent);
             Intent floatIntent = new Intent(LockScreenService.this, FloatButtonService.class);
             stopService(floatIntent);  // Останавливаем сервис плавающей кнопки (если был запущен)
             android.os.Process.killProcess(android.os.Process.myPid());  // Завершаем процесс приложения
@@ -125,5 +131,8 @@ public class LockScreenService extends Service {
             // Освобождаем ссылку
             lockScreenView = null;
         }
+        // При уничтожении сервиса тоже показываем плавающую кнопку
+        Intent showIntent = new Intent("ACTION_SHOW_FLOAT_BUTTON");
+        sendBroadcast(showIntent);
     }
 }
